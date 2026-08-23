@@ -79,15 +79,10 @@ If you prefer installing it as a **Skill** instead of a global prompt:
 #### Option A: Using `skills` CLI
 ```bash
 # Add from my-skills collection (Recommended)
-npx skills add HaoNgo232/my-skills --skill evidence-aware-reasoning
-
-# Or install standalone
-npx skills add HaoNgo232/evidence-aware-reasoning
 
 # Or install globally as a skill
 npx skills add HaoNgo232/my-skills --skill evidence-aware-reasoning -g
 ```
-
 #### Option B: Manual Skill Clone
 ```bash
 # Gemini / Antigravity Skill
@@ -101,4 +96,4 @@ git clone https://github.com/HaoNgo232/evidence-aware-reasoning.git ~/.claude/sk
 
 ## License
 
-[MIT](./LICENSE)
+[MIT](../LICENSE)

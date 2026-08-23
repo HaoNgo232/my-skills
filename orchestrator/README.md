@@ -30,5 +30,5 @@ npx skills add HaoNgo232/my-skills --skill orchestrator
 
 ## 📄 License
 
-[MIT](./LICENSE)
+[MIT](../LICENSE)
 

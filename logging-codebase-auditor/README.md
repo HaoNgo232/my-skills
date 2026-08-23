@@ -29,4 +29,4 @@ Audit the logging practices in this codebase.
 
 ## License
 
-[MIT](./LICENSE)
+[MIT](../LICENSE)
