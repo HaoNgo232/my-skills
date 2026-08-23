@@ -1,0 +1,237 @@
+version: "1.1.0"
+scope: "framework-independent"
+
+defaults:
+  mode: audit-only
+  output_language: user-language
+  structured_format: json
+  timestamp_format: iso-8601-utc
+  evidence_required: true
+  no_runtime_assumptions: true
+
+field_policy:
+  base_fields:
+    required_when_applicable:
+      - event.name
+      - severity
+      - service.name
+      - deployment.environment
+    generated_by_logger_or_backend:
+      - timestamp
+
+  correlation_fields:
+    required_for_request_scoped_events:
+      - request.id
+    required_when_tracing_enabled:
+      - trace.id
+      - span.id
+
+  operation_fields:
+    required_for_completed_operations:
+      - outcome
+      - duration_ms
+    recommended:
+      - operation.name
+      - module
+      - service.version
+
+  http_fields:
+    allow:
+      - http.request.method
+      - http.route
+      - http.response.status_code
+      - network.protocol.version
+      - user_agent.original
+    conditional:
+      - client.address
+      - user.id
+    deny_by_default:
+      - http.request.body
+      - http.response.body
+      - http.request.headers
+      - http.response.headers
+      - url.query
+
+  error_fields:
+    recommended:
+      - error.type
+      - error.code
+      - error.message
+      - error.stack
+    restrictions:
+      - error.stack should normally appear once at the ownership boundary
+      - error.message must be checked for secrets and personal data
+
+  prohibited_fields:
+    - password
+    - passphrase
+    - access_token
+    - refresh_token
+    - authorization
+    - cookie
+    - set-cookie
+    - session_id
+    - api_key
+    - private_key
+    - client_secret
+    - database_url_with_credentials
+    - payment_card_number
+    - cvv
+    - raw_jwt
+
+rules:
+  - id: LOG-SEC-001
+    severity: CRITICAL
+    title: Credentials or authentication material must not be logged
+    detect:
+      - logging password, token, cookie, authorization or secret values
+      - serializing objects containing authentication material
+    requirement: Omit the field or redact it before the logger receives it
+
+  - id: LOG-SEC-002
+    severity: HIGH
+    title: Request and response payloads are deny-by-default
+    detect:
+      - logging complete request bodies
+      - logging complete response bodies
+      - serializing complete request or response objects
+    requirement: Use an explicit field allowlist and size limit
+
+  - id: LOG-SEC-003
+    severity: HIGH
+    title: Prevent log injection
+    detect:
+      - user-controlled strings used as an event name
+      - raw newline-containing input written into plain-text logs
+      - string-concatenated logs containing unsanitized input
+    requirement: Use structured fields and a stable event name
+
+  - id: LOG-PII-001
+    severity: MEDIUM
+    title: Personal data must have an explicit purpose
+    detect:
+      - email, phone, address, IP or user profile logged without protection
+      - personal data included in routine success logs
+    requirement: Omit, pseudonymize or redact unless operationally required
+
+  - id: LOG-STR-001
+    severity: MEDIUM
+    title: Important logs must be structured
+    detect:
+      - interpolated strings containing multiple operational values
+      - JSON embedded as a string
+    requirement: Use a stable event name and machine-readable fields
+
+  - id: LOG-STR-002
+    severity: MEDIUM
+    title: Event names must be stable
+    detect:
+      - dynamic event names containing identifiers or messages
+      - natural-language message used as the only event identifier
+    requirement: Use stable names such as order.created or payment.failed
+
+  - id: LOG-COR-001
+    severity: MEDIUM
+    title: Request-scoped logs require correlation
+    detect:
+      - inbound-operation logs without a request or correlation identifier
+      - asynchronous work losing correlation or trace context
+    requirement: Propagate request and trace context across boundaries
+
+  - id: LOG-ERR-001
+    severity: HIGH
+    title: Critical failures require an ownership-boundary event
+    detect:
+      - swallowed exceptions
+      - failures converted into fallback values without observable evidence
+      - background operations failing without a final failure event
+    requirement: Emit one useful failure event at the handling boundary
+
+  - id: LOG-ERR-002
+    severity: MEDIUM
+    title: Avoid duplicate stack traces
+    detect:
+      - the same exception logged and rethrown through multiple layers
+    requirement: Log detailed error data once at the ownership boundary
+
+  - id: LOG-LVL-001
+    severity: MEDIUM
+    title: Log levels must reflect actionability
+    detect:
+      - expected client failures logged as error
+      - service outages logged only as info
+      - successful high-frequency operations logged as warn or error
+    requirement: Apply the level matrix from core-standard.md
+
+  - id: LOG-VOL-001
+    severity: HIGH
+    title: No unbounded logging inside loops
+    detect:
+      - logs emitted once per collection item
+      - per-row logs in migrations or batch operations
+      - per-recipient logs in bulk operations
+    requirement: Aggregate counts and retain only bounded failure details
+
+  - id: LOG-VOL-002
+    severity: HIGH
+    title: Payload and collection sizes must be bounded
+    detect:
+      - arbitrary arrays, objects, query results or buffers logged
+    requirement: Log counts, identifiers and truncated allowlisted summaries
+
+  - id: LOG-VOL-003
+    severity: HIGH
+    title: Production debug and query logging must be controlled
+    detect:
+      - debug enabled unconditionally
+      - database query logging enabled in production
+      - verbose framework logging without environment control
+    requirement: Disable by default or use temporary controlled activation
+
+  - id: LOG-VOL-004
+    severity: MEDIUM
+    title: High-frequency success logs need sampling or aggregation
+    detect:
+      - one info log for every successful operation on a hot path
+      - health, readiness or metrics endpoints logged routinely
+    requirement: Exclude, sample or aggregate low-value events
+
+  - id: LOG-VOL-005
+    severity: HIGH
+    title: Local file logging requires capacity controls
+    detect:
+      - the application writes log files locally
+      - rotation, retention, quota or external draining is not verified
+    requirement: Verify rotation, retention, quota and failure behavior
+
+  - id: LOG-VOL-006
+    severity: HIGH
+    title: Logging buffers must be bounded
+    detect:
+      - unbounded in-memory or disk-backed queues
+      - transport retry without capacity limits
+      - logging backpressure can exhaust memory or storage
+    requirement: Configure bounded buffers and observable drop behavior
+
+  - id: LOG-DUP-001
+    severity: MEDIUM
+    title: Avoid duplicate lifecycle logs
+    detect:
+      - the same completion event logged at multiple application layers
+      - transport and business layers emit equivalent success events
+    requirement: Assign one ownership boundary for each event
+
+  - id: LOG-AUD-001
+    severity: HIGH
+    title: Security and business audit events need explicit schemas
+    detect:
+      - sensitive administrative or destructive actions lack audit events
+    requirement: Record actor, action, target and outcome without secrets
+
+  - id: LOG-OBS-001
+    severity: LOW
+    title: Use the correct observability signal
+    detect:
+      - logs used only for aggregate rates or latency distributions
+      - repetitive progress logs used instead of metrics
+    requirement: Recommend metrics for aggregates and traces for flow timing

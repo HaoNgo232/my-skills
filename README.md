@@ -17,10 +17,14 @@ Each skill is maintained as an independent module containing standard YAML front
 ## 🚀 Quick Start & Installation
 
 ### 1. Install a specific skill (Recommended)
-You can cherry-pick and install any individual skill directly into your current workspace:
+You can cherry-pick and install any individual skill directly into your current project:
 
 ```bash
+# Install Orchestrator
 npx skills add HaoNgo232/my-skills --skill orchestrator
+
+# Install Logging Codebase Auditor
+npx skills add HaoNgo232/my-skills --skill logging-codebase-auditor
 ```
 
 ### 2. Install all skills in this collection
@@ -36,11 +40,17 @@ npx skills add HaoNgo232/my-skills
 
 ```
 my-skills/
-├── README.md                  # Main registry & documentation
+├── README.md                          # Main registry & documentation
 ├── .gitignore
-└── orchestrator/              # Multi-agent orchestrator skill
-    ├── SKILL.md               # Standard Agent Skill specification
-    └── README.md              # Detailed documentation & usage guide
+├── orchestrator/                      # Multi-agent orchestrator skill
+│   ├── SKILL.md                       # Standard Agent Skill specification
+│   └── README.md                      # Documentation & usage guide
+└── logging-codebase-auditor/          # Logging quality & observability auditor
+    ├── SKILL.md                       # Skill specification
+    ├── README.md                      # Documentation
+    ├── LICENSE                        # MIT License
+    ├── assets/                        # Diagrams & visual assets
+    └── references/                    # Reference guidelines
 ```
 
 ---
@@ -64,4 +74,3 @@ To add a new skill to this repository:
 ## 📄 License
 
 MIT License © 2026 [Ngo Gia Hao (HaoNgo232)](https://github.com/HaoNgo232)
-
