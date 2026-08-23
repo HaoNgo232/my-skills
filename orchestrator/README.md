@@ -28,3 +28,7 @@ npx skills add HaoNgo232/my-skills --skill orchestrator
 
 - Complete skill definition and prompt templates: [`SKILL.md`](./SKILL.md)
 
+## 📄 License
+
+[MIT](./LICENSE)
+
